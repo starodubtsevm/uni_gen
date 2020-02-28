@@ -19,6 +19,9 @@ class gen_device(object):
 		data_left  = []
 		data_right = []
 		data_stereo =[]
+		data_in = []
+		k = 0
+		temp = 0
 
 		if status:
 			print(status, file=sys.stderr)
@@ -33,32 +36,42 @@ class gen_device(object):
 			np.sin(2 * np.pi * self.fc * t)
 			self.data_right = 1 * self.ampl * \
 				np.sin(2 * np.pi * self.fc * t)
-			self.data_stereo = np.column_stack([self.data_left, self.data_right])
+			self.data_stereo = np.column_stack([self.data_left, \
+							self.data_right])
 			outdata[::] = self.data_stereo
 			self.start_idx += frames
 
 		if self.mode == "krl":
-
 			for j in range(7, -1, -1):
-				self.data_in.append((self.byte & 1<<j)>>j)
+				data_in.\
+				append((self.byte & 1<<j)>>j)
 
 			for i in range(len(t)):
-				if self.data_in[self.k] == 1:
+				if data_in[self.k] == 1:
 					data_left.append((self.ampl * np.sin(2 * \
 					np.pi * (self.fc-self.fdev) * t[i])))
-					self.temp+=1.0/self.fs
-					if self.temp >= 1.0/self.fdev:
+					self.temp+= 1.0/self.fs
+					if self.temp >= (1.0/self.fdev):
+						print ("one"+str(self.k))
+						print (str(self.temp))
 						self.k+=1
-						if self.k>7:self.k=0
-						self.temp=0
+						if self.k > 7:
+							self.k = 0
+							self.temp = 0
+							self.data_in = [0]
 				else:
 					data_left.append((self.ampl * np.sin(2 * \
 					np.pi * (self.fc+self.fdev) * t[i])))
-					self.temp+=1.0/self.fs
-					if self.temp >= 1.0/self.fdev:
+					self.temp+= 1.0/self.fs
+					if self.temp >= (1.0/self.fdev):
+						print ("zero" +str(self.k))
+						print (str(self.temp))
 						self.k+=1
-						if self.k>7:self.k=0
-						self.temp=0
+						if self.k > 7:
+							self.k = 0 
+							self.temp = 0
+							self.data_in = [0]
+
 			data_right = data_left
 			data_stereo = np.column_stack([data_left, data_right])
 			outdata[::] = data_stereo
@@ -67,13 +80,13 @@ class gen_device(object):
 		
 		self.q.put(indata[::self.downsample, self.mapping])
 
-	def __init__(self, amplitude = 0.1,frequency = 150,
-					blocksize = 1024, samplerate = 16000,
-					freq_min = 150,freq_max=1000,freq_step=50,
-					time_conv = 1):
+	def __init__(self, amplitude = 0.1,frequency = 300,
+			blocksize = 1024, samplerate = 16000,
+			freq_min = 150,freq_max=1000,freq_step=50,
+			time_conv = 1):
 		"""initialization"""
-		self.k = 0
 		self.temp = 0
+		self.k = 0
 		self.Uref = 0.35
 		self.downsample = 1
 		self.start_idx = 0
@@ -81,7 +94,7 @@ class gen_device(object):
 		self.start = 0
 		self.x = []
 		self.y = []
-
+		self.data_in = []
 		self.data_in = []
 		self.fc = freq_min
 		self.channels = [1,2]
@@ -184,7 +197,7 @@ class gen_device(object):
 		global lines
 		global data_mean
 
-		length = int(250 * samplerate / (1000 * self.downsample))
+		length = int(1000 * samplerate / (1000 * self.downsample))
 		plotdata = np.zeros((length, len(self.channels)))
 		fig, ax = plt.subplots()
 		lines = ax.plot(plotdata)
