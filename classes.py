@@ -15,19 +15,54 @@ class gen_device(object):
 
 	def __audio_callback (self,indata, outdata, frames, time, status):
 		"""callback function"""
+
+		data_left  = []
+		data_right = []
+		data_stereo =[]
+
 		if status:
 			print(status, file=sys.stderr)
 #--передача-потока на аудиовыход--------------------------------------------
-
-		t = (self.start_idx + np.arange(frames)) / (sd.default.samplerate)
+		t = (self.start_idx + np.arange(frames)) / \
+					(sd.default.samplerate)
 		t = t.reshape(-1, 1)
-		data_left  = 1 * self.amplitude * np.sin(2 * np.pi * self.frequency * t)
-		data_right = 1 * self.amplitude * np.sin(2 * np.pi * self.frequency * t)
-		
-		data_stereo = np.column_stack([data_left, data_right])
-		#outdata[::, self.mapping] = self.amplitude * np.sin(2 * np.pi * self.frequency * t)
-		outdata[::] = data_stereo
-		self.start_idx += frames
+
+		if self.mode == "afc":
+
+			self.data_left  = 1 * self.ampl * \
+			np.sin(2 * np.pi * self.fc * t)
+			self.data_right = 1 * self.ampl * \
+				np.sin(2 * np.pi * self.fc * t)
+			self.data_stereo = np.column_stack([self.data_left, self.data_right])
+			outdata[::] = self.data_stereo
+			self.start_idx += frames
+
+		if self.mode == "krl":
+
+			for j in range(7, -1, -1):
+				self.data_in.append((self.byte & 1<<j)>>j)
+
+			for i in range(len(t)):
+				if self.data_in[self.k] == 1:
+					data_left.append((self.ampl * np.sin(2 * \
+					np.pi * (self.fc-self.fdev) * t[i])))
+					self.temp+=1.0/self.fs
+					if self.temp >= 1.0/self.fdev:
+						self.k+=1
+						if self.k>7:self.k=0
+						self.temp=0
+				else:
+					data_left.append((self.ampl * np.sin(2 * \
+					np.pi * (self.fc+self.fdev) * t[i])))
+					self.temp+=1.0/self.fs
+					if self.temp >= 1.0/self.fdev:
+						self.k+=1
+						if self.k>7:self.k=0
+						self.temp=0
+			data_right = data_left
+			data_stereo = np.column_stack([data_left, data_right])
+			outdata[::] = data_stereo
+			self.start_idx += frames
 #--прием потока с микрофоного входа-------------------------------------
 		
 		self.q.put(indata[::self.downsample, self.mapping])
@@ -37,6 +72,8 @@ class gen_device(object):
 					freq_min = 150,freq_max=1000,freq_step=50,
 					time_conv = 1):
 		"""initialization"""
+		self.k = 0
+		self.temp = 0
 		self.Uref = 0.35
 		self.downsample = 1
 		self.start_idx = 0
@@ -44,19 +81,23 @@ class gen_device(object):
 		self.start = 0
 		self.x = []
 		self.y = []
-		self.data_left  = []
-		self.data_right = []
-		self.frequency = freq_min
+
+		self.data_in = []
+		self.fc = freq_min
 		self.channels = [1,2]
-		self.amplitude = amplitude
+		self.ampl = amplitude
+		self.mode = "krl"
+		self.byte = 0x2C
+		self.fdev = 11
 		self.freq_min = freq_min
 		self.freq_max = freq_max
 		self.freq_step = freq_step
 		self.time_conv = time_conv
 		self.data_mean = 0
 		self.downsample = 1
+		self.fs = samplerate
 		sd.default.blocksize = blocksize
-		sd.default.samplerate = samplerate
+		sd.default.samplerate = self.fs
 		sd.default.channels = 2
 		self.q = queue.Queue()
 		self.stream = sd.Stream(device = (sd.default.device, sd.default.device),
@@ -89,13 +130,13 @@ class gen_device(object):
 			data_mean_left = np.mean(rms_left)
 			data_mean_right = np.mean(rms_right)
 
-			print(self.frequency,data_mean_left)
-			self.x.append(self.frequency)
+			print(self.fc,data_mean_left)
+			self.x.append(self.fc)
 			self.y.append(20*np.log10(data_mean_left/data_mean_right))
-			self.frequency += self.freq_step
+			self.fc += self.freq_step
 			self.flag_start = 1
 			#figure.ax.set_title("Входной сигнал. СКЗ = %d у.е." % (data_mean))
-			if self.frequency > self.freq_max:
+			if self.fc > self.freq_max:
 				fig, ax = plt.subplots()
 				ax.axis((self.freq_min, self.freq_max, -30, 3))
 				ax.set_title("АЧХ устройства. Время замера = %d сек"
@@ -126,8 +167,8 @@ class gen_device(object):
 			
 			shift = len(data)
 
-			if self.calc(data) == 0:
-				 raise SystemExit
+			#if self.calc(data) == 0:
+			#	 raise SystemExit
 
 			plotdata = np.roll(plotdata, -shift, axis=0)
 			plotdata[-shift:, :] = data
@@ -159,24 +200,12 @@ class gen_device(object):
 				right=False, left=True, labelleft=True)
 		return fig
 
-	def single_tone(self,freq,ampl):
-		return 0
-
-	def alsn(self,freq,code,ampl):
-		return 0
-
-	def alsen(self,code1,code2,ampl):
-		return 0
-		
 	def krl(self,freq,code,ampl):
+		self.mode = "krl"
+		self.amplitude = ampl
+		self.frequency = freq
+		self.code = 0x2C
+
 		return 0
 
-	def trc3(self,freq,mod,ampl):
-		return 0
-
-	def fm(self,freq,mod,ampl):
-		return 0
-
-	def am(self,freq,mod,kmod,ampl):
-		return 0
 
