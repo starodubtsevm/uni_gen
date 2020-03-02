@@ -35,7 +35,6 @@ class gen_device(object):
 		data = np.asarray(data_krl)\
 		 	+ np.asarray(data_alsn) + np.asarray(data_ars)
 
-		#data_stereo = np.column_stack([data_krl, data_krl])
 		data_stereo = np.column_stack([data, data])
 		self.start_idx += frames
 #--передача-потока на аудиовыход--------------------------------------------
@@ -56,6 +55,7 @@ class gen_device(object):
 		self.krl_ampl = 0.1
 		self.krl_code = 0x2C
 		self.krl_fdev = 11
+		self.krl_speed = 12.98
 		for j in range(7, -1, -1):
 				self.data_in.append((self.krl_code & 1<<j)>>j)
 
@@ -123,7 +123,7 @@ class gen_device(object):
 				f_cur = self.krl_freq - self.krl_fdev
 			data_krl.append(self.krl_ampl*np.sin(2*np.pi*f_cur*t[i]))
 			self.count_krl+= 1.0/self.fs
-			if self.count_krl >= 1.0/self.krl_fdev:
+			if self.count_krl >= 1.0/self.krl_speed:
 				self.count_krl = 0
 				self.num_bit+= 1
 				if self.num_bit > 7:
