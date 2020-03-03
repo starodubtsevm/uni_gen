@@ -134,7 +134,7 @@ class gen_device(object):
 		''' формирование сигнала АЛСН '''
 
 		data_alsn  = []
-
+		alsn_on = 0
 		if	self.alsn_code not in ("Green","Yellow","RedYellow"):
 			self.alsn_code = None
 
@@ -142,66 +142,65 @@ class gen_device(object):
 			self.count_alsn+= 1.0/self.fs
 
 			if self.alsn_code == "Green":
-				if (self.count_alsn <= self.alsn_green['pause1']):
+				if self.count_alsn <=\
+						 self.alsn_green['pause1']:
 					alsn_on = 0
 
-				elif (self.count_alsn > self.alsn_green['pause1']) &\
-						 (self.count_alsn <= self.alsn_green['pulse1']):
+				elif self.count_alsn <=\
+						 self.alsn_green['pulse1']:
 					alsn_on = 1
 
-				elif (self.count_alsn > self.alsn_green['pulse1']) &\
-						 (self.count_alsn <= self.alsn_green['pause2']):
+				elif self.count_alsn <=\
+						 self.alsn_green['pause2']:
 					alsn_on = 0
 
-				elif (self.count_alsn > self.alsn_green['pause2']) &\
-				(self.count_alsn <= self.alsn_green['pulse2']):
+				elif self.count_alsn <=\
+						 self.alsn_green['pulse2']:
 					alsn_on = 1
 
-				elif (self.count_alsn > self.alsn_green['pulse2']) &\
-				(self.count_alsn <= self.alsn_green['pause3']):
+				elif self.count_alsn <=\
+						 self.alsn_green['pause3']:
 					alsn_on = 0
 
-				elif (self.count_alsn > self.alsn_green['pause3']) &\
-				(self.count_alsn <= self.alsn_green['pulse3']):
+				elif self.count_alsn <=\
+						 self.alsn_green['pulse3']:
 					alsn_on = 1
-
-				elif (self.count_alsn > self.alsn_green['pulse3']):
-					alsn_on = 0
+				elif self.count_alsn >=\
+						 self.alsn_green['pulse3']:
 					self.count_alsn = 0
-					
+
 			elif self.alsn_code == "Yellow":
-				if (self.count_alsn <= self.alsn_yellow['pause1']):
+				if self.count_alsn <=\
+						 self.alsn_yellow['pause1']:
 					alsn_on = 0
-
-				elif (self.count_alsn > self.alsn_yellow['pause1']) &\
-						 (self.count_alsn <= self.alsn_yellow['pulse1']):
+				elif self.count_alsn <=\
+						 self.alsn_yellow['pulse1']:
 					alsn_on = 1
-
-				elif (self.count_alsn > self.alsn_yellow['pulse1']) &\
-						 (self.count_alsn <= self.alsn_yellow['pause2']):
+				elif self.count_alsn <=\
+						 self.alsn_yellow['pause2']:
 					alsn_on = 0
-
-				elif (self.count_alsn > self.alsn_yellow['pause2']) &\
-				(self.count_alsn <= self.alsn_yellow['pulse2']):
+				elif self.count_alsn <=\
+						 self.alsn_yellow['pulse2']:
 					alsn_on = 1
+				elif self.count_alsn >=\
+						 self.alsn_yellow['pulse2']:
 					self.count_alsn = 0
 
 			elif self.alsn_code == "RedYellow":
-				if (self.count_alsn <= self.alsn_redyellow['pulse1']):
+				if self.count_alsn <=\
+						 self.alsn_redyellow['pulse1']:
 					alsn_on = 1
-
-				elif (self.count_alsn > self.alsn_redyellow['pulse1']) &\
-						 (self.count_alsn <= self.alsn_redyellow['pause1']):
+				elif self.count_alsn <=\
+						 self.alsn_redyellow['pause1']:
 					alsn_on = 0
-
-				elif (self.count_alsn > self.alsn_redyellow['pause1']):
+				elif self.count_alsn >=\
+						 self.alsn_redyellow['pause1']:
 					self.count_alsn = 0
-					alsn_on = 0
 			else:
-				alsn_on = 1
+				alsn_on = 0
 
 			data_alsn.append(alsn_on*self.alsn_ampl*\
-									np.sin(2*np.pi*self.alsn_freq*t[i]))
+					np.sin(2*np.pi*self.alsn_freq*t[i]))
 		return data_alsn
 
 	def proc_ars(self,t):
