@@ -2,7 +2,6 @@
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button, RadioButtons
-
 import sounddevice as sd
 import sys
 import queue
@@ -33,7 +32,7 @@ class gen_device(object):
 		#data_alsen = self proc_alsen(t)
 
 		data = np.asarray(data_krl)\
-		 	+ np.asarray(data_alsn) + np.asarray(data_ars)
+			+ np.asarray(data_alsn) + np.asarray(data_ars)
 
 		data_stereo = np.column_stack([data, data])
 		self.start_idx += frames
@@ -57,30 +56,30 @@ class gen_device(object):
 		self.krl_fdev = 11
 		self.krl_speed = 12.98
 		for j in range(7, -1, -1):
-				self.data_in.append((self.krl_code & 1<<j)>>j)
+			self.data_in.append((self.krl_code & 1<<j)>>j)
 
 		self.count_alsn = 0
 		self.alsn_freq = 50
 		self.alsn_ampl = 0.1
 		self.alsn_code = "RedYellow"
 		self.alsn_green = {
-							'pause1': 0.03,
-							'pulse1': 0.38,
-							'pause2': 0.5,
-							'pulse2': 0.72,
-							'pause3': 0.84,
-							'pulse3': 1.06
-							}
+				'pause1': 0.03,
+				'pulse1': 0.38,
+				'pause2': 0.5,
+				'pulse2': 0.72,
+				'pause3': 0.84,
+				'pulse3': 1.06
+				}
 		self.alsn_yellow = {
-							'pause1': 0.03,
-							'pulse1': 0.41,
-							'pause2': 0.53,
-							'pulse2': 0.91,
-							}
+				'pause1': 0.03,
+				'pulse1': 0.41,
+				'pause2': 0.53,
+				'pulse2': 0.91,
+				}
 		self.alsn_redyellow = {
-							'pulse1': 0.23,
-							'pause1': 0.80
-							}
+				'pulse1': 0.23,
+				'pause1': 0.80
+				}
 
 		self.count_alsen = 0
 		self.alsen_freq = 175
@@ -92,9 +91,9 @@ class gen_device(object):
 		self.ars_ampl = 0.1
 		self.sao = False
 		self.sao_param = {
-							'pulse1': 0.5,
-							'pause1': 1.0
-						}
+				'pulse1': 0.5,
+				'pause1': 1.0
+				}
 
 		self.downsample = 1
 		self.start_idx = 0
@@ -106,7 +105,7 @@ class gen_device(object):
 		sd.default.channels = 2
 		self.q = queue.Queue()
 		self.generator = sd.Stream(device = (sd.default.device, sd.default.device),
-									callback = self.__audio_callback)
+		callback = self.__audio_callback)
 #		self.generator.start()
 		self.mapping = [c - 1 for c in self.channels] 
 
@@ -221,7 +220,7 @@ class gen_device(object):
 					self.count_ars = 0
 
 			data_ars.append(ars_on*self.ars_ampl*\
-									np.sin(2*np.pi*self.ars_freq*t[i]))
+				np.sin(2*np.pi*self.ars_freq*t[i]))
 		return data_ars
 
 	def proc_alsen(self, t, alsen_data):
