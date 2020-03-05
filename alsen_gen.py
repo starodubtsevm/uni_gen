@@ -5,7 +5,7 @@ import numpy as np
 
 def proc_alsen(Fs, N, Code_alsen1, Code_alsen2):
 
-   Fcar = 175 # несущая АЛС-ЕН
+   Fcar = 174.89 # несущая АЛС-ЕН
 
    A = 1
    k = 2 * np.cos(2 * np.pi * Fcar / Fs)
@@ -41,11 +41,10 @@ def proc_alsen(Fs, N, Code_alsen1, Code_alsen2):
 
    for i in range(N):
 
-      if imp_duty_count < 1463:
+      if imp_duty_count < int((1/13.89)/(1/16000)):
          imp_duty_count=imp_duty_count+1
       else:
          imp_duty_count=0
-         count_bit=count_bit-1
          if count_bit==0:
             count_bit=8
             Byte1=Code_alsen1
@@ -53,6 +52,7 @@ def proc_alsen(Fs, N, Code_alsen1, Code_alsen2):
          diBit=((Byte1 & 0x80)>> 6)+((Byte2 & 0x80)>>7)
          Byte1=Byte1<<1
          Byte2=Byte2<<1
+         count_bit=count_bit-1
 
       X0_0=k*X1_0-X2_0
       y_0.append(X0_0)
@@ -87,7 +87,7 @@ def proc_alsen(Fs, N, Code_alsen1, Code_alsen2):
 
       if diBit == 0: y_res.append(X0_0)
       if diBit == 1: y_res.append(X0_90)
-      if diBit == 2: y_res.append(X0_180)
-      if diBit == 3: y_res.append(X0_270)
+      if diBit == 3: y_res.append(X0_180)
+      if diBit == 2: y_res.append(X0_270)
 
    return y_res

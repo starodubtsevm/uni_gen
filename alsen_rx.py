@@ -1,5 +1,6 @@
 import numpy   as np
 from config import*
+from IIR2Filter import *
 
 class alsen_rx(object):
    '''Приемник сигналов АЛСЕН'''
@@ -14,14 +15,14 @@ class alsen_rx(object):
       self.X1_0 = 0
       self.X2_0 = self.A * np.sin(2 * np.pi * self.Fcar / self.fs)
 
-      self.X0_90 = 0
+      self.X0_90 = -1
       self.X1_90 = 0
       self.X2_90 = self.A * np.sin(2 * np.pi * self.Fcar / self.fs)
       self.cycle_count = 0
 
-      self._data0 = []
-      self._data90 = []
-      self._buff_size = (1/11)/(1/self.fs)
+      self._buff_size = int((1/13.89)/(1/self.fs))
+      self._data0 = [0]*self._buff_size
+      self._data90 = [0]*self._buff_size
 
       self.index= 0
       self.h = h
@@ -47,53 +48,39 @@ class alsen_rx(object):
 
       return y_0, y_90
 
-   def mux1(self,gen0,gen90,x0,x90):
+   def mux1(self,gen0,gen90,x):
       '''Входные перемножители'''
-      y0 = x0 * gen0
-      y90 = x90 * gen90
+      y0 = x * gen0
+      y90 = x * gen90
 
       return y0, y90
 
-   def lpf1(self,x0,x90):
-      '''ФНЧ (интегратор на периоде длительности посылки)'''
-
-      acc0 = 0   # accumulator
-      acc90 = 0
-      indx = 0
-
-      for j in range (self.size):
-         acc0 = acc0  + x0 * self.h[j]
-         acc90= acc90 + x90 * self.h[j]
-         if indx == ((self.size)-1):
-            indx = 0
-         else:
-            indx += 1
-
-      return acc0, acc90 # result to 16 bit value
-
    def diff_decode(self,x0,x90):
       '''Дифференциальный декодер'''
-      y1 = 0
-      y2 = 0
 
-      return y1, y2
+      y1 = x0  * self.delay0(x0)
+      y2 = x90 * self.delay0(x0)
+      y3 = x0  * self.delay90(x90)
+      y4 = x90 * self.delay90(x90)
 
-   def delay_T(self,x0,x90):
+      y5 = y2 - y3
+      y6 = y1 + y4
+      y7 = y6 + y5
+      y8 = y6 - y5
+
+      return y7, y8
+
+   def delay0(self,x0):
       '''Задержка сигнала на длительность посылки'''
       self._data0.insert(0,x0)
       self._data0.pop()
       y0 = self._data0[self._buff_size-1]
-
+      return y0
+      
+   def delay90(self,x90):
+      '''Задержка сигнала на длительность посылки'''
       self._data90.insert(0,x90)
       self._data90.pop()
       y90 = self._data90[self._buff_size-1]
-
-      return y0, y90
-
-   def decim(self,x0,x90):
-      '''Прореживание'''
-      if self.count_dec > 10:
-          y0 = x0
-
-      return 0
+      return y90
 
