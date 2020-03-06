@@ -63,10 +63,10 @@ class alsen_rx(object):
       y3 = x0  * self.delay90(x90)
       y4 = x90 * self.delay90(x90)
 
-      y5 = y2 - y3
+      y5 = y3 - y2
       y6 = y1 + y4
       y7 = y6 + y5
-      y8 = y6 - y5
+      y8 = y5 - y6
 
       return y7, y8
 

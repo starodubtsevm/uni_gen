@@ -5,9 +5,9 @@ from alsen_gen import*
 from comparator import*
 
 fs = 16000
-Code_alsen1 = 0
-Code_alsen2 = 16
-t = np.arange(0.0, 2, 1/fs)
+Code_alsen1 = 16
+Code_alsen2 = 0
+t = np.arange(0.0, 1.5, 1/fs)
 
 res0 =[]
 res90 =[]
@@ -20,11 +20,12 @@ res12=[]
 res13=[]
 res14=[]
 sig =[]
+temp =[]
 
-sig = proc_alsen(fs, len(t), Code_alsen1, Code_alsen2)
+sig,temp = proc_alsen(fs, len(t), Code_alsen1, Code_alsen2)
 
-flt_iir1 = IIR2Filter(2, [26], 'low',design='cheby1',rs = 1, fs=fs)
-flt_iir2 = IIR2Filter(2, [26], 'low',design='cheby1',rs = 1, fs=fs)
+flt_iir1 = IIR2Filter(2, [39], 'low',design='cheby1',rs = 1, fs=fs)
+flt_iir2 = IIR2Filter(2, [39], 'low',design='cheby1',rs = 1, fs=fs)
 rx = alsen_rx()
 comp0 = comparator(-0.1,0.1, 1)
 comp90 = comparator(-0.1,0.1, 1)
@@ -58,13 +59,14 @@ ax3 = plt.subplot(313, sharex=ax1, sharey=ax2)
 ax1.plot(t,sig)
 ax1.grid(True)
 
+ax2.plot(t,temp)
 ax2.plot(t,res3)
-ax2.plot(t,res13)
+ax2.plot(t,res4)
 ax2.grid(True)
 
-ax3.plot(t,res4)
-ax3.plot(t,res14)
-ax3.grid(True)
+ax3.plot(t,temp)
+#ax3.plot(t,res4)
+ax2.grid(True)
 
 plt.show()
 
