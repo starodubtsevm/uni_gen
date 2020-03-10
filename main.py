@@ -1,72 +1,40 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from alsen_rx import*
-from alsen_gen import*
-from comparator import*
+from gen import*
+from const import*
 
-fs = 16000
-Code_alsen1 = 16
-Code_alsen2 = 0
-t = np.arange(0.0, 1.5, 1/fs)
+gks1 = gen_device()
 
-res0 =[]
-res90 =[]
-res = []
-res2 =[]
-res3 =[]
-res4 =[]
-res11=[]
-res12=[]
-res13=[]
-res14=[]
-sig =[]
-temp =[]
+#-настройка генератора КРЛ-----------------------------------------------------
+gks1.krl_freq = 475
+gks1.krl_ampl = 0.0
+gks1.krl_code = 0x2C
 
-sig,temp = proc_alsen(fs, len(t), Code_alsen1, Code_alsen2)
+#------------------------------------------------------------------------------
 
-flt_iir1 = IIR2Filter(2, [39], 'low',design='cheby1',rs = 1, fs=fs)
-flt_iir2 = IIR2Filter(2, [39], 'low',design='cheby1',rs = 1, fs=fs)
-rx = alsen_rx()
-comp0 = comparator(-0.1,0.1, 1)
-comp90 = comparator(-0.1,0.1, 1)
+#-настройка генератора АЛСН----------------------------------------------------
+gks1.alsn_freq = 50
+gks1.alsn_ampl = 0.0
+gks1.alsn_code = "RedYellow"
 
-for i in range (len(t)):
+#------------------------------------------------------------------------------
 
-   gen0, gen90 = rx.local_gen(t)
-   y0_aftermux1, y90_aftermux1 = rx.mux1(gen0, gen90, sig[i])
-   y0_afterlpf1 = flt_iir1.filter(y0_aftermux1)
-   y90_afterlpf1 = flt_iir2.filter(y90_aftermux1)
+#-настройка генератора АЛС ЕН--------------------------------------------------
+gks1.alsen_ampl = 0.1
+gks1.alsen_data = [0x2C,0x2C]
 
-   y7,y8 = rx.diff_decode(y0_afterlpf1, y90_afterlpf1)
-   y9 = comp0.proc(y7)
-   y10 = comp90.proc(y8)
+#------------------------------------------------------------------------------
 
-   res0.append(gen0)
-   res90.append(gen90)
-   res11.append(y0_aftermux1)
-   res12.append(y90_aftermux1)
-   res.append(y0_afterlpf1)
-   res2.append(y90_afterlpf1)
-   res3.append(y7)
-   res4.append(y8)
-   res13.append(y9)
-   res14.append(y10)
+#-настройка генератора АРС-----------------------------------------------------
+gks1.ars_freq1 = 75
+gks1.ars_freq1 = 0
+gks1.ars_ampl1 = 0.0
+gks1.ars_ampl2 = 0.0
 
-ax1 = plt.subplot(311)
-ax2 = plt.subplot(312, sharex=ax1)
-ax3 = plt.subplot(313, sharex=ax1, sharey=ax2)
+#------------------------------------------------------------------------------
 
-ax1.plot(t,sig)
-ax1.grid(True)
+#-запуск генератора------------------------------------------------------------
+gks1.generator.start()
 
-ax2.plot(t,temp)
-ax2.plot(t,res3)
-ax2.plot(t,res4)
-ax2.grid(True)
+#------------------------------------------------------------------------------
 
-ax3.plot(t,temp)
-#ax3.plot(t,res4)
-ax2.grid(True)
-
-plt.show()
+input ('Press "Enter" to exit')
 
